@@ -211,8 +211,15 @@ class replay
         for ($i=0; $this->data{$i}!=chr(0); $i++) {
             $this->game['name'] .= $this->data{$i};
         }
-        $this->data = substr($this->data, $i+2); // 0-byte ending the string + 1 unknown byte
- 
+        $this->data = substr($this->data, $i+1); // 0-byte ending the string + 1 unknown byte
+
+        //unknown byte can be a null-terminated string, for example hunter2
+        $this->game['privateString'] = '';
+        for ($i=0; $this->data{$i}!=chr(0); $i++) {
+            $this->game['privateString'] .= $this->data{$i};
+        }
+        $this->data = substr($this->data, $i+1);
+        
         // 4.3 [Encoded String]
         $temp = '';
 
@@ -1086,10 +1093,10 @@ class replay
                         $n+=2;
                         break;
                     case 0x7B:
-                        $n+=16;
+                        $n+=17;
                         break;
                     case 0x7A:
-                        $n+=20;
+                        $n+=21;
                         break;
                     default:
                         $temp = '';
@@ -1104,7 +1111,7 @@ class replay
                         }
 
                         $this->errors[] = 'Unknown action at '.convert_time($this->time).': 0x'.sprintf('%02X', $action).', prev: 0x'.sprintf('%02X', $prev).', dump: '.$temp;
-
+                       
                         // skip to the next CommandBlock
                         // continue 3, not 2 because of http://php.net/manual/en/control-structures.continue.php#68193
                         // ('Current functionality treats switch structures as looping in regards to continue.')
